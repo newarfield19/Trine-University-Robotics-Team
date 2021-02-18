@@ -32,7 +32,11 @@ Pin D8 is bad on the arduino
 
 
 //------------------------------------------------------------------------------------------------------------------
-             
+
+//Used to control the ESC
+//Controlling the ESC with this module only lets us spin the motor in one direction, but that shouldn't be a problem
+#include <Servo.h>
+
 int ch1 = 0; // We will avoid keeping these variables in the loop so that we can continue to use the values for every tick instead of everyother tick if they were to be contained within the loop
 int ch2 = 0; //declares the ch2 variable and defines its placeholder value as 0 until the code starts
 int x = 0; // the variable used to alternate between the channels
@@ -40,6 +44,15 @@ int x = 0; // the variable used to alternate between the channels
 // declares the variable names and pins going to be used for the reciever
 #define CH1 2 //left stick
 #define CH2 10 //right stick
+
+Servo ESC; // The servo object that controls the weapon motor
+int ESCinput; // Input from the controller that we use to control the weapon motor
+int ESCpin; // The pin number for the ESC
+int minESCPulseWidth; // Minimum and maximum pulse width in microseconds
+int maxESCPulseWidth;
+boolean weaponActive = false; // Tracks whether the weapon should be on or off
+int weaponOnValue; // Signal values to send the motor to turn the weapon on and off respectively
+int weaponOffValue;
 
 //---------------------------------
 
@@ -56,6 +69,8 @@ int in4 = 4;
 //this is one time use code that will only be ran when the arduino is starting up
 void setup() {
  
+  ESC.attach(ESCpin, minESCPulseWidth, maxESCPulseWidth);
+  
   Serial.begin(9600); //Used to start the serial monitor for debugging
 
   //makes each pin on the arduino an input so we may read from the reciever
@@ -98,8 +113,6 @@ void loop() {
     //Serial.println("0"); // used to see what x-value is being used
     x = 1;
   }
-
-
   
   else if (x==1)
   {
@@ -112,7 +125,14 @@ void loop() {
     x=0; //switches the alternating variable to the other value so that it infinately repeats
   }
   
-
+  // Turns the weapon on and off
+  if (weaponActive) {
+    ESC.write(weaponOnValue);
+  }
+  else {
+    ESC.write(weaponOffValue);
+  }
+  
   //-------------------------------------------------------------------------------------------------------
 
   //This portion of the code is used to now use the information for the reciever to control the motors using PWM signals
