@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:nano",
+    "configuration": "cpu=atmega328old",
+    "sketch": "Robot_Code_2021_V1.ino",
+    "port": "COM3"
+}
