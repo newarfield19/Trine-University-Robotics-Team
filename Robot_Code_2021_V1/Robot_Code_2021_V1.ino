@@ -39,20 +39,24 @@ Pin D8 is bad on the arduino
 
 int ch1 = 0; // We will avoid keeping these variables in the loop so that we can continue to use the values for every tick instead of everyother tick if they were to be contained within the loop
 int ch2 = 0; //declares the ch2 variable and defines its placeholder value as 0 until the code starts
+int ch3 = 0; //declares the ch3 variable and defines its placeholder value as 0 until the code starts
 int x = 0; // the variable used to alternate between the channels
+bool inverted = false;
 
 // declares the variable names and pins going to be used for the reciever
 #define CH1 2 //left stick
 #define CH2 10 //right stick
+#define CH3 12 //Weapon switch
 
 Servo ESC; // The servo object that controls the weapon motor
 int ESCinput; // Input from the controller that we use to control the weapon motor
 int ESCpin; // The pin number for the ESC
-int minESCPulseWidth; // Minimum and maximum pulse width in microseconds
-int maxESCPulseWidth;
-boolean weaponActive = false; // Tracks whether the weapon should be on or off
-int weaponOnValue; // Signal values to send the motor to turn the weapon on and off respectively
-int weaponOffValue;
+int minESCPulseWidth = 1000; // Minimum and maximum pulse width in microseconds
+int maxESCPulseWidth = 2000;
+bool weaponActive = false; // Tracks whether the weapon should be on or off
+int weaponOnValue = 90; // Signal values to send the motor to turn the weapon on and off respectively
+int weaponOffValue = 0;
+int currentWeaponSpeed = 0;
 
 //---------------------------------
 
@@ -108,8 +112,7 @@ void loop() {
     ch1 = constrain(ch1, -255, 255); //shrinks the input values into a range between -255 and 255
 
     Serial.print("Ch 1: "); //prints out some values for debugging
-    Serial.print(ch1);
-    Serial.print("     ");
+    Serial.println(ch1);
     //Serial.println("0"); // used to see what x-value is being used
     x = 1;
   }
@@ -122,16 +125,34 @@ void loop() {
     Serial.print("Ch 2: ");
     Serial.println(ch2);
     //Serial.println("1"); // used to see what x-value is being used
+    x=2; //switches the alternating variable to the other value so that it infinately repeats
+  }
+  else {
+    ch3 = map(pulseIn(CH3, HIGH, 30000), 1000, 2000, -500, 500);
+    ch3 = constrain(ch3, -255, 255);
+    if (ch3 > 250) {
+      weaponActive = true;
+    }
+    else {
+      weaponActive = false;
+    }
+    Serial.print("Ch 3: ");
+    Serial.println(ch3);
+    //Serial.println("3"); // used to see what x-value is being used
     x=0; //switches the alternating variable to the other value so that it infinately repeats
   }
   
   // Turns the weapon on and off
-  if (weaponActive) {
-    ESC.write(weaponOnValue);
+  if (weaponActive && currentWeaponSpeed < weaponOnValue) {
+    currentWeaponSpeed++;
   }
-  else {
-    ESC.write(weaponOffValue);
+  else if (!weaponActive && currentWeaponSpeed > weaponOffValue) {
+    currentWeaponSpeed--;
   }
+  Serial.print("Current weapon speed: ");
+  Serial.println(currentWeaponSpeed);
+
+  //ESC.write(currentWeaponSpeed);
   
   //-------------------------------------------------------------------------------------------------------
 
@@ -203,3 +224,5 @@ void loop() {
 
 
 //----------------------------------------------------------------------------------------------------------------------
+
+//void driveMotor(int output1, int output2, int
